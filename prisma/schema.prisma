@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String
+  unit      String
+  createdAt DateTime @default(now())
+}
+
+model Spo {
+  id String @id @default(cuid())
+  judul String
+  jenis String @default("SPO") // SPO / PROGRAM / PANDUAN
+  noDokumen String
+  noRevisi String @default("01")
+  halaman String @default("1/2")
+  tglTerbit DateTime
+  ditetapkanOleh String @default("Direktur")
+  namaDirektur String @default("dr. Dedy Waskita, MHPM")
+
+  pengertian String
+  tujuan String
+  kebijakan String
+  prosedur String
+  unitTerkait String @default("") // simpan "Unit Medical Check Up, Unit Rekam Medik"
+
+  unit String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

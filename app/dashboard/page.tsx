@@ -1,0 +1,126 @@
+'use client'
+import { useEffect, useState } from 'react'
+import SPOForm from '@/components/SPOForm'
+import SPOPreview from '@/components/SPOPreview'
+
+export default function Dashboard(){
+  const [user, setUser]=useState<any>(null);
+  const [spos, setSpos]=useState<any[]>([]);
+  const [editingData, setEditingData]=useState<any>(null);
+  const [previewData, setPreviewData]=useState<any>(null);
+  const [showPreview, setShowPreview]=useState(false);
+
+  useEffect(()=>{
+    const u = JSON.parse(localStorage.getItem('user')||'null');
+    if(!u || u.role === 'ADMIN') { localStorage.removeItem('user'); location.href='/login'; return; }
+    setUser(u);
+    loadData(u.unit);
+  },[]);
+
+  const loadData = (unit:string) => {
+    fetch(`/api/spo?unit=${unit}`).then(r=>r.json()).then(setSpos);
+  }
+
+  const handleSaved = () => {
+    setEditingData(null);
+    loadData(user.unit);
+    alert('Dokumen berhasil disimpan!');
+  }
+
+  const handlePrint = (data:any) => {
+    window.open(`/api/spo/pdf?id=${data.id}`, '_blank');
+  }
+
+  const handleDelete = async (id:string) => {
+    if(!confirm('Hapus dokumen ini?')) return;
+    await fetch(`/api/spo/${id}`, { method: 'DELETE' });
+    loadData(user.unit);
+  }
+
+  const logout = () => { localStorage.removeItem('user'); location.href='/login'; }
+  if(!user) return null;
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex">
+      <style>{`
+        @media print {
+          body * { display: none !important; }
+          .print-modal, .print-modal * { display: block !important; visibility: visible !important; }
+          .print-modal { position: static !important; display: block !important; width: auto !important; margin: 0 !important; padding: 0 !important; }
+          .print-modal > div { height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0 !important; }
+          .print-modal .overflow-auto { overflow: visible !important; }
+          #modal-actions { display: none !important; }
+        }
+      `}</style>
+
+      {/* Sidebar - Daftar Dokumen */}
+      <div className="w- bg-white border-r border-slate-200 p-5 flex flex-col shrink-0">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold">{user.unit[0]}</div>
+          <div><p className="font-bold leading-none">{user.unit}</p><p className="text- text-slate-500">{user.username} - {user.role}</p></div>
+        </div>
+          <button onClick={logout} className="mt-4 w-full border border-slate-200 py-2.5 rounded-xl text-sm hover:bg-slate-50">Logout</button>
+
+        <div className="flex-1 overflow-y-auto pr-1">
+          <p className="text- font-bold text-slate-400 uppercase tracking-widest mb-3">Dokumen Saya ({spos.length})</p>
+          <div className="space-y-3">
+            {spos.map((s:any)=>(
+              <div key={s.id} className="p-3 rounded-xl border bg-slate-50 border-slate-200 hover:bg-white transition">
+                <div className="flex justify-between items-start">
+                  <p className="text- font-bold truncate w-[70%]">{s.judul}</p>
+                  <span className={`text- px-2 py-0.5 rounded-full font-bold ${s.jenis==='SPO'?'bg-blue-100 text-blue-700':s.jenis==='PROGRAM'?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}`}>{s.jenis}</span>
+                </div>
+                <p className="text- text-slate-500 font-mono mt-1 truncate">{s.noDokumen}</p>
+                <div className="grid grid-cols-3 gap-1 mt-3">
+                  <button onClick={()=>{setPreviewData(s); setShowPreview(true)}} className="text- bg-white border border-slate-200 px-2 py-1.5 rounded-lg hover:bg-slate-900 hover:text-white">👁 Preview</button>
+                  <button onClick={()=>{setEditingData(s); window.scrollTo(0,0)}} className="text- bg-white border border-slate-200 px-2 py-1.5 rounded-lg hover:bg-slate-900 hover:text-white">✏ Edit</button>
+                  <button onClick={()=>handlePrint(s)} className="text- bg-slate-900 text-white px-2 py-1.5 rounded-lg">🖨 Cetak</button>
+                </div>
+              </div>
+            ))}
+            {spos.length===0 && <p className="text-xs text-slate-400 p-3 text-center border border-dashed rounded-xl">Belum ada dokumen</p>}
+          </div>
+        </div>
+       
+      </div>
+
+      {/* Main - Hanya Form Buat Surat */}
+      <div className="flex-1 p-8 overflow-auto">
+        <div className="max-w- mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-2xl font-bold">{editingData? 'Edit Dokumen' : 'Buat Surat Baru'}</h1>
+              <p className="text-sm text-slate-500">Isi form dibawah, No Dokumen bisa diedit manual, Halaman otomatis</p>
+            </div>
+            {editingData && <button onClick={()=>setEditingData(null)} className="text-xs border px-4 py-2 rounded-xl bg-white hover:bg-slate-50">+ Buat Baru</button>}
+          </div>
+          <SPOForm user={user} onSaved={handleSaved} editingData={editingData} />
+        </div>
+      </div>
+
+      {/* POPUP PREVIEW - Sekarang cuma muncul kalau klik Preview/Print */}
+      {showPreview && previewData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8 print-modal">
+          <div className="bg-[#f1f5f9] w-full max-w-5xl h-[86vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div id="modal-actions" className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shrink-0">
+              <div className="overflow-hidden">
+                <p className="font-bold text-sm truncate max-w-[60ch]">{previewData.judul}</p>
+                <p className="text-xs text-slate-500 font-mono">{previewData.noDokumen} • {previewData.noRevisi} • {previewData.halaman}</p>
+              </div>
+              <div className="flex gap-2">
+                <a href={`/api/spo/pdf?id=${previewData.id}`} target="_blank" rel="noreferrer" className="bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-bold">⬇ Download PDF</a>
+                <button onClick={()=>window.open(`/api/spo/pdf?id=${previewData.id}`, '_blank')} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold">🖨 Cetak</button>
+                <button onClick={()=>setShowPreview(false)} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold">Tutup</button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-4 md:p-6 bg-[#e2e8f0]">
+              <div className="mx-auto shadow-xl" style={{maxWidth:'950px'}}>
+                <SPOPreview data={previewData} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
