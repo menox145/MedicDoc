@@ -7,3 +7,5 @@ auth-wal
 *.db
 *.db-journal
 prisma/dev.db
+seed-now.js
+seed-plain.js
