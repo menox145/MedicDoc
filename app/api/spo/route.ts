@@ -5,6 +5,12 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const unit = searchParams.get('unit')
   const role = searchParams.get('role')
+  // If the database is not configured (eg. local dev without DATABASE_URL),
+  // return an empty array instead of letting Prisma throw and crash the route.
+  if (!process.env.DATABASE_URL) {
+    console.warn('DATABASE_URL not set — returning empty SPO list for GET /api/spo')
+    return NextResponse.json([])
+  }
   if (role === 'ADMIN') {
     const data = await prisma.spo.findMany({ orderBy: { createdAt: 'desc' } })
     return NextResponse.json(data)
@@ -14,6 +20,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database tidak dikonfigurasi' }, { status: 500 })
+  }
+
   try {
     const body = await req.json()
     // biar gak duplikat, cek dulu (findUnique requires a unique field; gunakan findFirst)

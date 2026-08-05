@@ -1,6 +1,12 @@
-export default function SPOPreview({ data }: any) {
+import type { Spo } from '@prisma/client'
+
+type SPOPreviewProps = {
+  data: Spo | null
+}
+
+export default function SPOPreview({ data }: SPOPreviewProps) {
   if(!data) return null
-  const units = data.unitTerkait? data.unitTerkait.split(', ') : []
+  const units = data.unitTerkait?.split(', ') ?? []
 
   // Render full document and rely on browser pagination. Use table thead so header repeats on each printed page.
   return (

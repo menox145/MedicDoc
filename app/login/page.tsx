@@ -8,6 +8,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const setSessionCache = (user: { username: string; role: string; unit?: string }) => {
+    const userData = { username: user.username, role: user.role, unit: user.unit || '' }
+    localStorage.setItem('user', JSON.stringify(userData))
+    document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/; max-age=${60 * 60 * 24 * 7}; sameSite=Lax`
+  }
+
   const handleLogin = async () => {
     setLoading(true);
     const res = await fetch('/api/auth/login', {
@@ -17,7 +23,7 @@ export default function LoginPage() {
     });
     const data = await res.json();
     if(res.ok) {
-      localStorage.setItem('user', JSON.stringify(data));
+      setSessionCache(data)
       if(data.role === 'ADMIN') router.push('/admin');
       else router.push('/dashboard');
     } else {

@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database tidak dikonfigurasi' }, { status: 500 })
+  }
+
   const body = await req.json()
   const { id } = await params
   const updated = await prisma.spo.update({ where: { id }, data: {

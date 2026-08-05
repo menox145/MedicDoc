@@ -3,7 +3,7 @@ import path from 'path'
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  prisma?: PrismaClient
 }
 
 function resolveSqliteUrl(url: string) {
@@ -19,9 +19,11 @@ if (process.env.DATABASE_URL) {
   process.env.DATABASE_URL = resolveSqliteUrl(process.env.DATABASE_URL)
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+export const prisma: PrismaClient | null = process.env.DATABASE_URL
+  ? (globalForPrisma.prisma ?? new PrismaClient())
+  : null
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && prisma) {
   globalForPrisma.prisma = prisma
 }
 

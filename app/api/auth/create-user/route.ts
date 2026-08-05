@@ -2,6 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database tidak dikonfigurasi' }, { status: 500 })
+  }
+
   try {
     const body = await req.json()
     const { username, password, role, unit } = body

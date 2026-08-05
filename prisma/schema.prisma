@@ -17,23 +17,21 @@ model User {
 }
 
 model Spo {
-  id String @id @default(cuid())
-  judul String
-  jenis String @default("SPO") // SPO / PROGRAM / PANDUAN
-  noDokumen String
-  noRevisi String @default("01")
-  halaman String @default("1/2")
-  tglTerbit DateTime
-  ditetapkanOleh String @default("Direktur")
-  namaDirektur String @default("dr. Dedy Waskita, MHPM")
-
-  pengertian String
-  tujuan String
-  kebijakan String
-  prosedur String
-  unitTerkait String @default("")
-
-  unit String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  judul          String
+  jenis          String   @default("SPO")
+  noDokumen      String
+  noRevisi       String   @default("01")
+  halaman        String   @default("1/2")
+  tglTerbit      DateTime
+  ditetapkanOleh String   @default("Direktur")
+  namaDirektur   String   @default("dr. Dedy Waskita, MHPM")
+  pengertian     String
+  tujuan         String
+  kebijakan      String
+  prosedur       String
+  unitTerkait    String   @default("")
+  unit           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

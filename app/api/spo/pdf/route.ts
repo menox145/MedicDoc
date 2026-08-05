@@ -9,6 +9,10 @@ export async function GET(req: Request) {
     const id = searchParams.get('id')
     const jenis = searchParams.get('jenis')
 
+    if (!process.env.DATABASE_URL || !prisma) {
+      return new Response('Database not configured for PDF generation', { status: 400 })
+    }
+
     let data: any[] = []
     if (id) {
       const single = await prisma.spo.findUnique({ where: { id } })
@@ -18,6 +22,12 @@ export async function GET(req: Request) {
       data = await prisma.spo.findMany({ where: { jenis }, orderBy: { createdAt: 'desc' } })
     } else {
       data = await prisma.spo.findMany({ orderBy: { createdAt: 'desc' } })
+    }
+
+    // If DATABASE_URL is not set (local dev), return a clear error instead of
+    // letting Prisma throw during initialization.
+    if (!process.env.DATABASE_URL) {
+      return new Response('Database not configured for PDF generation', { status: 400 })
     }
 
     const logoPath = path.resolve(process.cwd(), 'public', 'logo.png')
